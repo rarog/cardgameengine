@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/green-felt-texture.jpg</file>
+        <file>images/logo.svg</file>
+        <file>images/slate.jpg</file>
+        <file>images/plank-wooden-texture.jpg</file>
+        <file>images/woodfloorboard.jpg</file>
+        <file>images/dirt.png</file>
+        <file>images/multiGameSelection.svg</file>
+        <file>images/newSingleGame.svg</file>
+        <file>images/singleGameSelection.svg</file>
+        <file>images/fullscreen.svg</file>
+        <file>images/tablecloth1.jpg</file>
+        <file>images/face-smile.svg</file>
+        <file>images/face-sad.svg</file>
+    </qresource>
+</RCC>

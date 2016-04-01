@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>ScriptedGames/solitaire.script</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,294 @@
+
+var endStacks = [];
+var mainStack = [];
+function playersRequired()
+{
+    return 1;
+}
+
+function init()
+{
+    var stackX = cards.stack("initial");
+    stackX.shuffle();
+
+    // the destination stacks
+    var eA=cards.createStack("EndA");
+    var eB=cards.createStack("EndB");
+    var eC=cards.createStack("EndC");
+    var eD=cards.createStack("EndD");
+    endStacks = [ eA, eB, eC, eD ];
+
+    var a1=cards.createStack("AkkuHidden");
+    a1.setSelectionMode( "None" );
+    var a2=cards.createStack("AkkuOpen");
+        
+    for ( var i = 0 ; i < 7 ; i++ )
+    {
+        var s1=cards.createStack("Stack"+(i+1));
+        s1.setPos( i , 1 );
+        s1.setOrientation( "down" );
+        s1.setSelectionMode( "ThisAndAbove" );
+        mainStack[i]=s1;
+    }
+
+    // set the dimension of the playing filed
+    cards.setSize( 7,4 );
+    a1.setPos( 0 , 0 );
+    a2.setPos( 1,  0 );
+    // leave 2,0 empty
+    
+    eA.setPos( 3 , 0 );
+    eB.setPos( 4, 0 );
+    eC.setPos( 5, 0 );
+    eD.setPos( 6, 0 );
+
+    giveCards(mainStack);    
+
+    for ( var i = 0 ; i < mainStack.length ; i++ )
+    {
+        openStack(mainStack[i]);
+    }
+    game.currentPlayer["score"]=0;
+}
+
+function giveCards(mainStack)
+{
+    for ( var i = 0 ; i < mainStack.length ; i++ )
+    {
+        // stack 1 gets one card, stack 2 - 2 etc
+        for ( var j = 0 ; j < i+1 ; j++ )
+        {
+            var card = cards.stack("initial").pop();
+            mainStack[i].layOnTop( card );
+        }
+    }
+    cards.stack("initial").moveAllCardsToStack( cards.stack("AkkuHidden") );
+}
+
+function onCardClick( stackName, card )
+{
+    this.test = stackName;
+    if ( stackName == "AkkuHidden" )
+    {
+        cards.stack( stackName ).pop();
+        card.show();
+        cards.stack( "AkkuOpen" ).layOnTop( card );
+    }
+}
+
+function onCardDoubleClick( stackName , card  )
+{
+    //hidden cards cannot be dragged
+    if ( card.isHidden() )
+        return;
+		
+    if ( card.rankName() == "Ace" )
+    {
+        // find the first free stack
+        for ( var i = 0 ; i < endStacks.length ; i++ )
+        {
+            if ( endStacks[i].isEmpty() )
+            {
+                cards.stack(stackName).dropCard( card );
+                endStacks[i].layOnTop( card );
+                openStack( cards.stack(stackName) );
+                return;
+            }
+        }
+    }else
+    {
+        // find a stack and place the card if the rank is coninuous
+        // or a two on a ace
+        for ( var i = 0 ; i < endStacks.length ; i++ )
+        {
+            if ( endStacks[i].isEmpty() == false )
+            {
+                var sameColor = endStacks[i].top().sameSuit( card );
+                var regularHigher = card.rankName() == endStacks[i].top().nextHigherRank();
+                var srcIsTwo = ( card.rankName() == "Two" );
+                var destIsAce = (endStacks[i].top().rankName() == "Ace" );
+                var twoOnAce = srcIsTwo && destIsAce ;
+                if ( sameColor && ( regularHigher || twoOnAce ) )
+                {
+                    cards.stack(stackName).dropCard( card );
+                    endStacks[i].layOnTop( card );
+                    openStack( cards.stack(stackName) );
+                    game.currentPlayer["score"]+=5;
+                    return;
+                }
+            }
+        }
+    }
+}
+
+function onCardMovedOnAnOther( cardList , destinationCard , fromStackName, toStackName )
+{
+    //hidden cards cannot be dragged
+    if ( cardList[0].isHidden() )
+        return;
+        
+    var srcStack=cards.stack( fromStackName );
+    var destStack = cards.stack( toStackName );
+        
+    if ( toStackName.indexOf("End") == 0 )
+    {
+        if ( cardList.length != 1 ) 
+        {
+            return;
+        }
+        // a four goes on a three -> ascending order
+        var regularHigher = cardList[0].rankName() == destStack.top().nextHigherRank();
+        var srcIsTwo = ( cardList[0].rankName() == "Two" );
+        var destIsAce = (destStack.top().rankName() == "Ace" );
+        var twoOnAce = srcIsTwo && destIsAce ;
+        if ( !regularHigher && !twoOnAce )
+        {
+            print( cardList[0].rankName() + "!=" +destStack.top().rankName() );
+            return;
+        }
+        if ( cardList[0].sameSuit( destinationCard ) == false )
+        {
+            return;
+        }
+
+        var card = srcStack.pop();
+        destStack.layOnTop(card);
+        game.currentPlayer["score"]+=5;
+    }
+    
+    if ( toStackName.indexOf("Stack") == 0 )
+    {
+        // descending order
+        if ( cardList[0].rankName() != destStack.top().nextLowerRank() )
+        {
+            print( cardList[0].rankName() + "!=" +destStack.top().nextLowerRank() );
+            return;
+        }
+        if ( cardList[0].sameColor( destinationCard ) == true )
+        {
+            return;
+        }
+        
+        for ( var i = 0 ; i < cardList.length ; i++ )
+        {
+            var card = cardList[i];
+            srcStack.dropCard( card );
+            destStack.layOnTop( card );
+        }
+		// removing from end stack costs ten points
+        if ( fromStackName.indexOf("End") == 0 )
+        {
+            game.currentPlayer["score"]-=10;
+        }
+    }
+        
+    openStack( srcStack );
+}
+
+function onCardMovedOnAnEmptyStack( cardList , fromStackName, toStackName )
+{
+    //hidden cards cannot be dragged
+    if ( cardList[0].isHidden() )
+        return;
+
+    var srcStack=cards.stack( fromStackName );
+    var destStack = cards.stack( toStackName );
+
+    if ( toStackName.indexOf("End") == 0 )
+    {
+        if ( cardList.length != 1 )
+        {
+            return;
+        }
+        var card = cardList[0];
+        if  ( ( card.rankName() != "Ace" ) || ( card.isHidden() ) )
+        {
+            return;
+        }
+        
+        srcStack.pop();
+        cards.stack( toStackName ).layOnTop( card );
+        
+    }
+    
+    if ( toStackName.indexOf("Stack") == 0 )
+    {
+        if ( cardList[0].rankName() != "King" )
+        {
+            return;
+        }
+                
+        for ( var i = 0 ; i < cardList.length ; i++ )
+        {
+            var card = cardList[i];
+            srcStack.dropCard( card );
+            destStack.layOnTop( card );
+        }
+    }
+
+    openStack( srcStack );
+}
+
+function onEmptyStackClicked( stackName )
+{
+    if ( stackName == "AkkuHidden" )
+    {
+        cards.stack("AkkuOpen").moveAllCardsToStack( cards.stack("AkkuHidden") );
+        cards.stack("AkkuHidden").flip();
+        game.round++;
+        if ( game.round > 5 )
+        {
+            game.gameOver("none");
+        }
+    }
+}
+
+function openStack( stack )
+{
+    if ( stack.isEmpty() == false )
+    {
+        stack.top().show();
+    }
+    checkHasWon();
+}
+
+function checkHasWon()
+{
+    // a player has won if all cards lay on the endstacks
+    for ( var i = 0 ; i < mainStack.length ; i++ )
+    {
+        if ( mainStack[i].isEmpty() == false )
+        {
+            return false;
+        }
+    }
+    
+    if ( cards.stack("AkkuOpen").isEmpty() == false )
+    {
+        return false;
+    }
+    
+    if ( cards.stack("AkkuHidden").isEmpty() == false )
+    {
+        return false;
+    }
+    game.gameOver( game.currentPlayer["id"] );
+    return true;
+}
+
+function updateDisplay()
+{
+}
+
+function timer( secondsPlayed )
+{
+    // every 5 seconds the user wait he drop a point
+    if ( secondsPlayed % 5 )
+    {
+        if ( game.currentPlayer["score"] > 0 )
+        {
+            game.currentPlayer["score"]-=1;
+        }
+    }
+}
+
