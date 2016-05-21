@@ -18,7 +18,7 @@ Copyright 2011 Claus Ilginnis <Claus@Ilginnis.de>
 
 */
 
-#include <QtGui/QApplication>
+#include <QApplication>
 #include "MainWindow.h"
 #include <QDateTime>
 

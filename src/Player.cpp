@@ -23,7 +23,7 @@ Copyright 2011 Claus Ilginnis <Claus@Ilginnis.de>
 
 Player::Player ( QObject * parent )
     : QObject ( parent )
-    , _id ( QUuid::createUuid() )
+    , _id ( QUuid::createUuid().toString() )
 {
 
 }

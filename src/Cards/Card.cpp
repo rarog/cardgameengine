@@ -70,7 +70,7 @@ Card::Card (    CardEnum::Rank  value, CardEnum::Suit color, QObject * parent ) 
     QObject ( parent )
     , _upsideDown ( true )
 {
-    _id = QUuid::createUuid();
+    _id = QUuid::createUuid().toString();
     _rank = value;
     _suit = color;
 #ifndef QT_NO_DEBUG

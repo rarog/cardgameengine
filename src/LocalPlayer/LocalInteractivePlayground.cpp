@@ -76,7 +76,8 @@ void LocalInteractivePlayground::mousePressEvent ( QGraphicsSceneMouseEvent * mo
 
     _startOfMouseAction = mouseEvent->scenePos();
 
-    _dragGroup = new QGraphicsItemGroup ( 0, this );
+    _dragGroup = new QGraphicsItemGroup ( 0 );
+    this->addItem( _dragGroup );
 
     addItemsById ( _draggedItems, _dragGroup );
 
