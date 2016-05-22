@@ -203,7 +203,10 @@ void CardStack::flip()
     {
         Card * card = _stack.at ( 0 );
         _stack.remove ( 0 );
-        card->show ( card->isHidden() );
+        // Original code indeed flips the cards, but for some unknown reason the cards happen to be already hidden and become visible.
+        // This is a workaround to ensure that cards are indeed hidden.
+        //card->show ( card->isHidden() );
+        card->show ( false );
         temp.insert ( 0, card );
     }
     _stack = temp;
